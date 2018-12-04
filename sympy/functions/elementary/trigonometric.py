@@ -2135,7 +2135,7 @@ class acos(InverseTrigonometricFunction):
                 sqrt((sqrt(2) + 2)/4): S.Pi/8,
                 sqrt((-sqrt(2) + 2)/4): 3*S.Pi/8,
                 -sqrt(-sqrt(2)/4 + S.Half): 5*S.Pi/8,
-                -sqrt(sqrt(2)/4 + S.Half)): 7*S.Pi/8,
+                -sqrt(sqrt(2)/4 + S.Half): 7*S.Pi/8,
             }
 
             if arg in cst_table:
