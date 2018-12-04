@@ -2126,6 +2126,10 @@ class acos(InverseTrigonometricFunction):
                 -sqrt(2)/2: 3*S.Pi/4,
                 1/sqrt(2): S.Pi/4,
                 -1/sqrt(2): 3*S.Pi/4,
+                (sqrt(5) + 1)/4: S.Pi/5,
+                (sqrt(5) - 1)/4: 2*S.Pi/5,
+                (-sqrt(5) + 1)/4: 3*S.Pi/5,
+                -(sqrt(5) + 1)/4: 4*S.Pi/5,
                 sqrt(3)/2: S.Pi/6,
                 -sqrt(3)/2: 5*S.Pi/6,
             }
