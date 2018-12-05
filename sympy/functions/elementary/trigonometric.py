@@ -1944,28 +1944,34 @@ class asin(InverseTrigonometricFunction):
 
         if arg.is_number:
             cst_table = {
-                sqrt(3)/2: 3,
-                -sqrt(3)/2: -3,
-                sqrt(2)/2: 4,
-                -sqrt(2)/2: -4,
-                1/sqrt(2): 4,
-                -1/sqrt(2): -4,
-                sqrt((5 - sqrt(5))/8): 5,
-                -sqrt((5 - sqrt(5))/8): -5,
-                S.Half: 6,
-                -S.Half: -6,
-                sqrt(2 - sqrt(2))/2: 8,
-                -sqrt(2 - sqrt(2))/2: -8,
-                (sqrt(5) - 1)/4: 10,
-                (1 - sqrt(5))/4: -10,
-                (sqrt(3) - 1)/sqrt(2**3): 12,
-                (1 - sqrt(3))/sqrt(2**3): -12,
-                (sqrt(5) + 1)/4: S(10)/3,
-                -(sqrt(5) + 1)/4: -S(10)/3
+                sqrt(3)/2: S.Pi/3,
+                -sqrt(3)/2: -S.Pi/3,
+                sqrt(2)/2: S.Pi/4,
+                -sqrt(2)/2: -S.Pi/4,
+                1/sqrt(2): S.Pi/4,
+                -1/sqrt(2): -S.Pi/4,
+                sqrt((5 - sqrt(5))/8): S.Pi/5,
+                -sqrt((5 - sqrt(5))/8): -S.Pi/5,
+                S.Half: S.Pi/6,
+                -S.Half: -S.Pi/6,
+                sqrt(2 - sqrt(2))/2: S.Pi/8,
+                -sqrt(2 - sqrt(2))/2: -S.Pi/8,
+                (sqrt(5) - 1)/4: S.Pi/10,
+                (1 - sqrt(5))/4: -S.Pi/10,
+                (sqrt(3) - 1)/sqrt(2**3): S.Pi/12,
+                (1 - sqrt(3))/sqrt(2**3): -S.Pi/12,
+                sqrt(2*sqrt(5) + 10)/4: 2*S.Pi/5,
+                sqrt(2)*sqrt(sqrt(5) + 5)/4: 2*S.Pi/5,#extra entry since this can comeback from asin(cos(9*pi/10))
+                sqrt(sqrt(2) + 2)/2: 3*S.Pi/8,
+                (sqrt(5) + 1)/4: 3*S.Pi/10,
+                (sqrt(2) + sqrt(6))/4: 5*S.Pi/12,
+                (-sqrt(6) + sqrt(2))/4: -S.Pi/12
             }
 
+            # if arg in cst_table:
+            #     return  / cst_table[arg]
             if arg in cst_table:
-                return S.Pi / cst_table[arg]
+                return cst_table[arg]
 
         i_coeff = arg.as_coefficient(S.ImaginaryUnit)
         if i_coeff is not None:
@@ -2135,7 +2141,15 @@ class acos(InverseTrigonometricFunction):
                 sqrt((sqrt(2) + 2)/4): S.Pi/8,
                 sqrt((-sqrt(2) + 2)/4): 3*S.Pi/8,
                 -sqrt(-sqrt(2)/4 + S.Half): 5*S.Pi/8,
-                -sqrt(sqrt(2)/4 + S.Half): 7*S.Pi/8
+                -sqrt(sqrt(2)/4 + S.Half): 7*S.Pi/8,
+                sqrt((sqrt(5) + 5)/8): S.Pi/10,
+                sqrt((-sqrt(5) + 5)/8): 3*S.Pi/10,
+                -sqrt((-sqrt(5) + 5)/8): 7*S.Pi/10,
+                -sqrt((sqrt(5) + 5)/8): 9*S.Pi/10,
+                (sqrt(2) + sqrt(6))/4: S.Pi/12,
+                (-sqrt(2) + sqrt(6))/4: 5*S.Pi/12,
+                (sqrt(2) - sqrt(6))/4: 7*S.Pi/12,
+                -(sqrt(2) + sqrt(6))/4: 11*S.Pi/12,
             }
 
             if arg in cst_table:
@@ -2154,6 +2168,39 @@ class acos(InverseTrigonometricFunction):
             ang = arg.args[0]
             if ang.is_comparable:
                 return pi/2 - asin(arg)
+
+        # if argument is mul with -1 and cos: acos(-cos(x))
+        if arg.is_Mul and len(arg.as_two_terms()) == 2 and ((isinstance(arg.as_two_terms()[1],cos) and arg.as_two_terms()[0] == -1) or (isinstance(arg.as_two_terms()[0],cos) and arg.as_two_terms()[1] == -1)):
+
+            # get the ang in the cos
+            mul_args = arg.as_two_terms()
+            if isinstance(mul_args[1], cos):
+                ang = pi - mul_args[1].args[0]
+            else:
+                ang = pi - mul_args[1].args[0]
+
+            # check angle
+            if ang.is_comparable:
+                ang %= 2*pi # restrict to [0,2*pi)
+                if ang > pi: # restrict to [0,pi]
+                    ang = 2*pi - ang
+
+                return ang
+
+        # if argument is mul with -1 and sin: : acos(-sin(x))
+        if arg.is_Mul and len(arg.as_two_terms()) == 2 and ((isinstance(arg.as_two_terms()[1],sin) and arg.as_two_terms()[0] == -1) or (isinstance(arg.as_two_terms()[0],sin) and arg.as_two_terms()[1] == -1)):
+
+            # get the sin
+            mul_args = arg.as_two_terms()
+            if isinstance(mul_args[1], sin):
+                arg_sin = mul_args[1]
+            else:
+                arg_sin = mul_args[0]
+
+            # get the angle
+            ang = arg_sin.args[0]
+            if ang.is_comparable:
+                return pi/2 - asin(-arg_sin)
 
     @staticmethod
     @cacheit
@@ -2315,7 +2362,7 @@ class atan(InverseTrigonometricFunction):
                 sqrt(3): 3,
                 -sqrt(3): -3,
                 (1 + sqrt(2)): S(8)/3,
-                -(1 + sqrt(2)): S(8)/3,
+                -(1 + sqrt(2)): -S(8)/3, #bugfix
                 (sqrt(2) - 1): 8,
                 (1 - sqrt(2)): -8,
                 sqrt((5 + 2*sqrt(5))): S(5)/2,
