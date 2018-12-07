@@ -3830,7 +3830,16 @@ class ImaginaryUnit(with_metaclass(Singleton, AtomicExpr)):
     __slots__ = []
 
     def _latex(self, printer):
-        return r"i"
+        latex_str = "i"
+        try:
+            str_user = printer._settings['imaginary_unit_str']
+            if str_user is not None:
+                latex_str = str_user
+        except:
+            pass
+
+        return r"%s" %latex_str
+
 
     @staticmethod
     def __abs__():
