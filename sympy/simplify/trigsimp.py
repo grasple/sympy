@@ -669,6 +669,8 @@ def trigsimp_old(expr, **opts):
 
         trigsyms = set().union(*[t.free_symbols for t in expr.atoms(*_trigs)])
         if len(trigsyms) > 1:
+            from sympy.simplify.simplify import separatevars
+            
             d = separatevars(expr)
             if d.is_Mul:
                 d = separatevars(d, dict=True) or d
