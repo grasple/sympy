@@ -135,7 +135,8 @@ class LatexPrinter(Printer):
         "mat_delim": "[",
         "symbol_names": {},
         "ln_notation": False,
-        "imaginary_unit_str": None
+        "imaginary_unit_str": None,
+        "list_delim": "["
     }
 
     def __init__(self, settings=None):
@@ -176,7 +177,7 @@ class LatexPrinter(Printer):
                 self._settings['mul_symbol_latex_numbers'] = \
                     self._settings['mul_symbol']
 
-        self._delim_dict = {'(': ')', '[': ']'}
+        self._delim_dict = {'(': ')', '[': ']', '\\{': '\\}'}
 
     def parenthesize(self, item, level, strict=False):
         prec_val = precedence_traditional(item)
@@ -1669,8 +1670,10 @@ class LatexPrinter(Printer):
         return self._print_tuple(expr)
 
     def _print_list(self, expr):
-        return r"\left [ %s\right ]" % \
-            r", \quad ".join([ self._print(i) for i in expr ])
+        left_list_delim = self._settings['list_delim']
+        right_list_delim = self._delim_dict[left_list_delim]
+        items = r", \quad ".join([ self._print(i) for i in expr ])
+        return r"\left %s %s\right %s" %(left_list_delim, items, right_list_delim)
 
     def _print_dict(self, d):
         keys = sorted(d.keys(), key=default_sort_key)
@@ -2268,7 +2271,7 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
     fold_short_frac=None, inv_trig_style="abbreviated",
     itex=False, ln_notation=False, long_frac_ratio=None,
     mat_delim="[", mat_str=None, mode="plain", mul_symbol=None,
-    order=None, symbol_names=None, imaginary_unit_str=None):
+    order=None, symbol_names=None, imaginary_unit_str=None, list_delim = "["):
     r"""Convert the given expression to LaTeX string representation.
 
     Parameters
@@ -2446,6 +2449,7 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
         'order' : order,
         'symbol_names' : symbol_names,
         'imaginary_unit_str': imaginary_unit_str,
+        'list_delim': list_delim,
     }
 
     return LatexPrinter(settings).doprint(expr)
