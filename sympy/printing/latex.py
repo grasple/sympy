@@ -136,7 +136,8 @@ class LatexPrinter(Printer):
         "symbol_names": {},
         "ln_notation": False,
         "imaginary_unit_str": None,
-        "list_delim": "["
+        "list_delim": "[",
+        "list_sep": ", \\quad "
     }
 
     def __init__(self, settings=None):
@@ -1672,7 +1673,8 @@ class LatexPrinter(Printer):
     def _print_list(self, expr):
         left_list_delim = self._settings['list_delim']
         right_list_delim = self._delim_dict[left_list_delim]
-        items = r", \quad ".join([ self._print(i) for i in expr ])
+        list_sep = self._settings['list_sep']
+        items = r"%s" %list_sep.join([ self._print(i) for i in expr ])
         return r"\left %s %s\right %s" %(left_list_delim, items, right_list_delim)
 
     def _print_dict(self, d):
@@ -2271,7 +2273,8 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
     fold_short_frac=None, inv_trig_style="abbreviated",
     itex=False, ln_notation=False, long_frac_ratio=None,
     mat_delim="[", mat_str=None, mode="plain", mul_symbol=None,
-    order=None, symbol_names=None, imaginary_unit_str=None, list_delim = "["):
+    order=None, symbol_names=None, imaginary_unit_str=None,
+    list_delim = "[", list_sep = ", \\quad "):
     r"""Convert the given expression to LaTeX string representation.
 
     Parameters
@@ -2324,6 +2327,12 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
         ``order`` keyword to ``none`` if speed is a concern.
     symbol_names : dictionary of strings mapped to symbols, optional
         Dictionary of symbols and the custom strings they should be emitted as.
+    imaginary_unit_str : string, optional
+        symbol for the imaginary unit. Default is "i".
+    list_delim : string, optional
+        The delimiter to wrap around matrices. Can be one of ``[``, ``(`` or ``\{``. Defaults to ``[``.
+    list_sep : string, optional
+        The delimiter which seperates the items in the list. Defaults to ``, \\quad ``.
 
     Notes
     =====
@@ -2450,6 +2459,7 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
         'symbol_names' : symbol_names,
         'imaginary_unit_str': imaginary_unit_str,
         'list_delim': list_delim,
+        'list_sep': list_sep
     }
 
     return LatexPrinter(settings).doprint(expr)
