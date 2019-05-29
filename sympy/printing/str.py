@@ -325,7 +325,7 @@ class StrPrinter(Printer):
 
     def _print_MatMul(self, expr):
         c, m = expr.as_coeff_mmul()
-        if c.is_number and c < 0:
+        if c.is_number and c.is_real and c < 0:
             expr = _keep_coeff(-c, m)
             sign = "-"
         else:
