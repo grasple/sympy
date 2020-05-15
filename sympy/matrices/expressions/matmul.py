@@ -283,7 +283,7 @@ def combine_powers(mul):
     return newmul(factor, *args)
 
 rules = (any_zeros, remove_ids, xxinv, unpack, rm_id(lambda x: x == 1),
-         merge_explicit, factor_in_front, flatten, combine_powers)
+         merge_explicit, factor_in_front, flatten)
 canonicalize = exhaust(typed({MatMul: do_one(*rules)}))
 
 def only_squares(*matrices):
