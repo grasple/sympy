@@ -2503,6 +2503,39 @@ class acos(InverseTrigonometricFunction):
             if ang.is_comparable:
                 return pi/2 - asin(arg)
 
+        # if argument is mul with -1 and cos: acos(-cos(x))
+        if arg.is_Mul and len(arg.as_two_terms()) == 2 and ((isinstance(arg.as_two_terms()[1],cos) and arg.as_two_terms()[0] == -1) or (isinstance(arg.as_two_terms()[0],cos) and arg.as_two_terms()[1] == -1)):
+
+            # get the ang in the cos
+            mul_args = arg.as_two_terms()
+            if isinstance(mul_args[1], cos):
+                ang = pi - mul_args[1].args[0]
+            else:
+                ang = pi - mul_args[1].args[0]
+
+            # check angle
+            if ang.is_comparable:
+                ang %= 2*pi # restrict to [0,2*pi)
+                if ang > pi: # restrict to [0,pi]
+                    ang = 2*pi - ang
+
+                return ang
+
+        # if argument is mul with -1 and sin: : acos(-sin(x))
+        if arg.is_Mul and len(arg.as_two_terms()) == 2 and ((isinstance(arg.as_two_terms()[1],sin) and arg.as_two_terms()[0] == -1) or (isinstance(arg.as_two_terms()[0],sin) and arg.as_two_terms()[1] == -1)):
+
+            # get the sin
+            mul_args = arg.as_two_terms()
+            if isinstance(mul_args[1], sin):
+                arg_sin = mul_args[1]
+            else:
+                arg_sin = mul_args[0]
+
+            # get the angle
+            ang = arg_sin.args[0]
+            if ang.is_comparable:
+                return pi/2 - asin(-arg_sin)
+
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):
