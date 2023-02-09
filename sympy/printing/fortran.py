@@ -17,7 +17,8 @@ SymPy is case sensitive. So, fcode adds underscores to variable names when
 it is necessary to make them different for Fortran.
 """
 
-from typing import Dict as tDict, Any
+from __future__ import annotations
+from typing import Any
 
 from collections import defaultdict
 from itertools import chain
@@ -34,6 +35,7 @@ from sympy.codegen.fnodes import (
 )
 from sympy.core import S, Add, N, Float, Symbol
 from sympy.core.function import Function
+from sympy.core.numbers import equal_valued
 from sympy.core.relational import Eq
 from sympy.sets import Range
 from sympy.printing.codeprinter import CodePrinter
@@ -94,7 +96,7 @@ class FCodePrinter(CodePrinter):
         intc: {'iso_c_binding': 'c_int'}
     }
 
-    _default_settings = {
+    _default_settings: dict[str, Any] = {
         'order': None,
         'full_prec': 'auto',
         'precision': 17,
@@ -104,8 +106,8 @@ class FCodePrinter(CodePrinter):
         'source_format': 'fixed',
         'contract': True,
         'standard': 77,
-        'name_mangling' : True,
-    }  # type: tDict[str, Any]
+        'name_mangling': True,
+    }
 
     _operators = {
         'and': '.and.',
@@ -339,12 +341,12 @@ class FCodePrinter(CodePrinter):
 
     def _print_Pow(self, expr):
         PREC = precedence(expr)
-        if expr.exp == -1:
+        if equal_valued(expr.exp, -1):
             return '%s/%s' % (
                 self._print(literal_dp(1)),
                 self.parenthesize(expr.base, PREC)
             )
-        elif expr.exp == 0.5:
+        elif equal_valued(expr.exp, 0.5):
             if expr.base.is_integer:
                 # Fortran intrinsic sqrt() does not accept integer argument
                 if expr.base.is_Number:
@@ -431,7 +433,7 @@ class FCodePrinter(CodePrinter):
         body = self._print(expr.body)
         return ('do {target} = {start}, {stop}, {step}\n'
                 '{body}\n'
-                'end do').format(target=target, start=start, stop=stop,
+                'end do').format(target=target, start=start, stop=stop - 1,
                         step=step, body=body)
 
     def _print_Type(self, type_):
@@ -773,3 +775,9 @@ class FCodePrinter(CodePrinter):
     def _print_ArrayConstructor(self, ac):
         fmtstr = "[%s]" if self._settings["standard"] >= 2003 else '(/%s/)'
         return fmtstr % ', '.join(map(lambda arg: self._print(arg), ac.elements))
+
+    def _print_ArrayElement(self, elem):
+        return '{symbol}({idxs})'.format(
+            symbol=self._print(elem.name),
+            idxs=', '.join(map(lambda arg: self._print(arg), elem.indices))
+        )

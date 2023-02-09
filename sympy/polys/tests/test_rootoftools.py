@@ -1,6 +1,7 @@
 """Tests for the implementation of RootOf class and related tools. """
 
 from sympy.polys.polytools import Poly
+import sympy.polys.rootoftools as rootoftools
 from sympy.polys.rootoftools import (rootof, RootOf, CRootOf, RootSum,
     _pure_key_dict as D)
 
@@ -121,7 +122,6 @@ def test_CRootOf_attributes():
     # should be changed to return whatever symbols would not be
     # the PurePoly dummy symbol
     raises(NotImplementedError, lambda: rootof(Poly(x**3 + y*x + 1, x), 0))
-
 
 
 def test_CRootOf___eq__():
@@ -248,8 +248,8 @@ def test_CRootOf_evalf():
     # issue 9019
     r0 = rootof(x**2 + 1, 0, radicals=False)
     r1 = rootof(x**2 + 1, 1, radicals=False)
-    assert r0.n(4) == -1.0*I
-    assert r1.n(4) == 1.0*I
+    assert r0.n(4) == Float(-1.0, 4) * I
+    assert r1.n(4) == Float(1.0, 4) * I
 
     # make sure verification is used in case a max/min traps the "root"
     assert str(rootof(4*x**5 + 16*x**3 + 12*x**2 + 7, 0).n(3)) == '-0.976'
@@ -326,6 +326,50 @@ def test_CRootOf_eval_rational():
              "0.33998104358485626",
              "0.86113631159405258",
              ]
+
+
+def test_CRootOf_lazy():
+    # irreducible poly with both real and complex roots:
+    f = Poly(x**3 + 2*x + 2)
+
+    # real root:
+    CRootOf.clear_cache()
+    r = CRootOf(f, 0)
+    # Not yet in cache, after construction:
+    assert r.poly not in rootoftools._reals_cache
+    assert r.poly not in rootoftools._complexes_cache
+    r.evalf()
+    # In cache after evaluation:
+    assert r.poly in rootoftools._reals_cache
+    assert r.poly not in rootoftools._complexes_cache
+
+    # complex root:
+    CRootOf.clear_cache()
+    r = CRootOf(f, 1)
+    # Not yet in cache, after construction:
+    assert r.poly not in rootoftools._reals_cache
+    assert r.poly not in rootoftools._complexes_cache
+    r.evalf()
+    # In cache after evaluation:
+    assert r.poly in rootoftools._reals_cache
+    assert r.poly in rootoftools._complexes_cache
+
+    # composite poly with both real and complex roots:
+    f = Poly((x**2 - 2)*(x**2 + 1))
+
+    # real root:
+    CRootOf.clear_cache()
+    r = CRootOf(f, 0)
+    # In cache immediately after construction:
+    assert r.poly in rootoftools._reals_cache
+    assert r.poly not in rootoftools._complexes_cache
+
+    # complex root:
+    CRootOf.clear_cache()
+    r = CRootOf(f, 2)
+    # In cache immediately after construction:
+    assert r.poly in rootoftools._reals_cache
+    assert r.poly in rootoftools._complexes_cache
 
 
 def test_RootSum___new__():

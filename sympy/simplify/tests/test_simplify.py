@@ -919,7 +919,7 @@ def test_issue_7971_21740():
     assert simplify(z) is S.Zero
     assert simplify(S.Zero) is S.Zero
     z = simplify(Float(0))
-    assert z is not S.Zero and z == 0
+    assert z is not S.Zero and z == 0.0
 
 
 @slow
@@ -1029,6 +1029,12 @@ def test_issue_19484():
     f = Function('f')
     e = x + sign(x + f(x)**3)
     assert simplify(Abs(x + f(x)**3) * e) == x*Abs(x + f(x)**3) + x + f(x)**3
+
+
+def test_issue_23543():
+    # Used to give an error
+    x, y, z = symbols("x y z", commutative=False)
+    assert (x*(y + z/2)).simplify() == x*(2*y + z)/2
 
 
 def test_issue_19161():

@@ -15,7 +15,7 @@ from sympy.physics.units.prefixes import (
 )
 from sympy.physics.units.definitions import (
     cd, K, coulomb, volt, ohm, siemens, farad, henry, tesla, weber, dioptre,
-    lux, katal, gray, becquerel, inch, liter, julian_year,
+    lux, katal, gray, becquerel, inch, hectare, liter, julian_year,
     gravitational_constant, speed_of_light, elementary_charge, planck, hbar,
     electronvolt, avogadro_number, avogadro_constant, boltzmann_constant,
     stefan_boltzmann_constant, atomic_mass_constant, molar_gas_constant,
@@ -30,7 +30,7 @@ from sympy.physics.units.definitions import (
     planck_impedance, planck_acceleration, bit, byte, kibibyte, mebibyte,
     gibibyte, tebibyte, pebibyte, exbibyte, curie, rutherford, radian, degree,
     steradian, angular_mil, atomic_mass_unit, gee, kPa, ampere, u0, kelvin,
-    mol, mole, candela, electric_constant, boltzmann
+    mol, mole, candela, electric_constant, boltzmann, angstrom
 )
 
 
@@ -50,6 +50,7 @@ dimsys_length_weight_time = DimensionSystem([
     pressure=dict(mass=1, length=-1, time=-2),
     frequency=dict(time=-1),
     action=dict(length=2, mass=1, time=-1),
+    area=dict(length=2),
     volume=dict(length=3),
 ))
 
@@ -92,8 +93,11 @@ dimsys_length_weight_time.set_quantity_scale_factor(dioptre, 1/meter)
 
 # Common volume and area units
 
-dimsys_length_weight_time.set_quantity_dimension(liter, length ** 3)
-dimsys_length_weight_time.set_quantity_scale_factor(liter, meter**3 / 1000)
+dimsys_length_weight_time.set_quantity_dimension(hectare, length**2)
+dimsys_length_weight_time.set_quantity_scale_factor(hectare, (meter**2)*(10000))
+
+dimsys_length_weight_time.set_quantity_dimension(liter, length**3)
+dimsys_length_weight_time.set_quantity_scale_factor(liter, meter**3/1000)
 
 
 # Newton constant
@@ -133,7 +137,7 @@ __all__ = [
     'planck_power', 'degree', 'mebi', 'K', 'planck_volume',
     'quart', 'pressure', 'W', 'joule', 'boltzmann_constant', 'c', 'g',
     'planck_force', 'exbi', 's', 'watt', 'action', 'hbar', 'gibibyte',
-    'DimensionSystem', 'cd', 'volt', 'planck_charge',
+    'DimensionSystem', 'cd', 'volt', 'planck_charge', 'angstrom',
     'dimsys_length_weight_time', 'pebi', 'vacuum_impedance', 'planck',
     'farad', 'gravitational_constant', 'u0', 'hertz', 'tesla', 'steradian',
     'josephson_constant', 'planck_area', 'stefan_boltzmann_constant',

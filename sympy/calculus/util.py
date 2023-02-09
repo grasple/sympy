@@ -4,6 +4,7 @@ from sympy.core import Pow, S
 from sympy.core.function import diff, expand_mul
 from sympy.core.kind import NumberKind
 from sympy.core.mod import Mod
+from sympy.core.numbers import equal_valued
 from sympy.core.relational import Relational
 from sympy.core.symbol import Symbol, Dummy
 from sympy.core.sympify import _sympify
@@ -16,7 +17,6 @@ from sympy.polys.polytools import degree, lcm_list
 from sympy.sets.sets import (Interval, Intersection, FiniteSet, Union,
                              Complement)
 from sympy.sets.fancysets import ImageSet
-from sympy.simplify.simplify import simplify
 from sympy.utilities import filldedent
 from sympy.utilities.iterables import iterable
 
@@ -229,16 +229,16 @@ def function_range(f, symbol, domain):
 def not_empty_in(finset_intersection, *syms):
     """
     Finds the domain of the functions in ``finset_intersection`` in which the
-    ``finite_set`` is not-empty
+    ``finite_set`` is not-empty.
 
     Parameters
     ==========
 
     finset_intersection : Intersection of FiniteSet
-                        The unevaluated intersection of FiniteSet containing
-                        real-valued functions with Union of Sets
+        The unevaluated intersection of FiniteSet containing
+        real-valued functions with Union of Sets
     syms : Tuple of symbols
-            Symbol for which domain is to be found
+        Symbol for which domain is to be found
 
     Raises
     ======
@@ -345,7 +345,7 @@ def periodicity(f, symbol, check=False):
     Parameters
     ==========
 
-    f : :py:class:`~.Expr`.
+    f : :py:class:`~.Expr`
         The concerned function.
     symbol : :py:class:`~.Symbol`
         The variable for which the period is to be determined.
@@ -424,7 +424,7 @@ def periodicity(f, symbol, check=False):
     if isinstance(f, Relational):
         f = f.lhs - f.rhs
 
-    f = simplify(f)
+    f = f.simplify()
 
     if symbol not in f.free_symbols:
         return S.Zero
@@ -481,9 +481,8 @@ def periodicity(f, symbol, check=False):
 
     elif f.is_Mul:
         coeff, g = f.as_independent(symbol, as_Add=False)
-        if isinstance(g, TrigonometricFunction) or coeff is not S.One:
+        if isinstance(g, TrigonometricFunction) or not equal_valued(coeff, 1):
             period = periodicity(g, symbol)
-
         else:
             period = _periodicity(g.args, symbol)
 
@@ -653,7 +652,7 @@ def is_convex(f, *syms, domain=S.Reals):
     To determine concavity of a function pass `-f` as the concerned function.
     To determine logarithmic convexity of a function pass `\log(f)` as
     concerned function.
-    To determine logartihmic concavity of a function pass `-\log(f)` as
+    To determine logarithmic concavity of a function pass `-\log(f)` as
     concerned function.
 
     Currently, convexity check of multivariate functions is not handled.
@@ -667,6 +666,8 @@ def is_convex(f, *syms, domain=S.Reals):
     True
     >>> is_convex(x**3, x, domain = Interval(-1, oo))
     False
+    >>> is_convex(1/x**2, x, domain=Interval.open(0, oo))
+    True
 
     References
     ==========
@@ -687,6 +688,9 @@ def is_convex(f, *syms, domain=S.Reals):
 
     f = _sympify(f)
     var = syms[0]
+    if any(s in domain for s in singularities(f, var)):
+        return False
+
     condition = f.diff(var, 2) < 0
     if solve_univariate_inequality(condition, var, False, domain):
         return False

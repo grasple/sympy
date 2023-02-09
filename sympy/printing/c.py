@@ -11,12 +11,14 @@ source code files that are compilable without further modifications.
 
 """
 
-from typing import Any, Dict as tDict, Tuple as tTuple
+from __future__ import annotations
+from typing import Any
 
 from functools import wraps
 from itertools import chain
 
 from sympy.core import S
+from sympy.core.numbers import equal_valued
 from sympy.codegen.ast import (
     Assignment, Pointer, Variable, Declaration, Type,
     real, complex_, integer, bool_, float32, float64, float80,
@@ -149,7 +151,7 @@ class C89CodePrinter(CodePrinter):
     standard = "C89"
     reserved_words = set(reserved_words)
 
-    _default_settings = {
+    _default_settings: dict[str, Any] = {
         'order': None,
         'full_prec': 'auto',
         'precision': 17,
@@ -160,7 +162,7 @@ class C89CodePrinter(CodePrinter):
         'dereference': set(),
         'error_on_reserved': False,
         'reserved_word_suffix': '_',
-    }  # type: tDict[str, Any]
+    }
 
     type_aliases = {
         real: float64,
@@ -168,7 +170,7 @@ class C89CodePrinter(CodePrinter):
         integer: intc
     }
 
-    type_mappings = {
+    type_mappings: dict[Type, Any] = {
         real: 'double',
         intc: 'int',
         float32: 'float',
@@ -183,7 +185,7 @@ class C89CodePrinter(CodePrinter):
         uint16: 'int16_t',
         uint32: 'int32_t',
         uint64: 'int64_t',
-    }  # type: tDict[Type, Any]
+    }
 
     type_headers = {
         bool_: {'stdbool.h'},
@@ -198,7 +200,7 @@ class C89CodePrinter(CodePrinter):
     }
 
     # Macros needed to be defined when using a Type
-    type_macros = {}  # type: tDict[Type, tTuple[str, ...]]
+    type_macros: dict[Type, tuple[str, ...]] = {}
 
     type_func_suffixes = {
         float32: 'f',
@@ -220,7 +222,7 @@ class C89CodePrinter(CodePrinter):
 
     _ns = ''  # namespace, C++ uses 'std::'
     # known_functions-dict to copy
-    _kf = known_functions_C89  # type: tDict[str, Any]
+    _kf: dict[str, Any] = known_functions_C89
 
     def __init__(self, settings=None):
         settings = settings or {}
@@ -255,7 +257,7 @@ class C89CodePrinter(CodePrinter):
         return codestring if codestring.endswith(';') else codestring + ';'
 
     def _get_comment(self, text):
-        return "// {}".format(text)
+        return "/* {} */".format(text)
 
     def _declare_number_const(self, name, value):
         type_ = self.type_aliases[real]
@@ -280,10 +282,10 @@ class C89CodePrinter(CodePrinter):
             return self._print_Function(expr)
         PREC = precedence(expr)
         suffix = self._get_func_suffix(real)
-        if expr.exp == -1:
+        if equal_valued(expr.exp, -1):
             literal_suffix = self._get_literal_suffix(real)
             return '1.0%s/%s' % (literal_suffix, self.parenthesize(expr.base, PREC))
-        elif expr.exp == 0.5:
+        elif equal_valued(expr.exp, 0.5):
             return '%ssqrt%s(%s)' % (self._ns, suffix, self._print(expr.base))
         elif expr.exp == S.One/3 and self.standard != 'C89':
             return '%scbrt%s(%s)' % (self._ns, suffix, self._print(expr.base))
@@ -645,7 +647,7 @@ class C99CodePrinter(C89CodePrinter):
     }.items()))
 
     # known_functions-dict to copy
-    _kf = known_functions_C99  # type: tDict[str, Any]
+    _kf: dict[str, Any] = known_functions_C99
 
     # functions with versions with 'f' and 'l' suffixes:
     _prec_funcs = ('fabs fmod remainder remquo fma fmax fmin fdim nan exp exp2'

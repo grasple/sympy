@@ -1,7 +1,7 @@
 from sympy.core.logic import fuzzy_and
 from sympy.core.sympify import _sympify
 from sympy.multipledispatch import dispatch
-from sympy.testing.pytest import XFAIL, raises, warns_deprecated_sympy
+from sympy.testing.pytest import XFAIL, raises
 from sympy.assumptions.ask import Q
 from sympy.core.add import Add
 from sympy.core.basic import Basic
@@ -135,9 +135,6 @@ def test_wrappers():
 def test_Eq_Ne():
 
     assert Eq(x, x)  # issue 5719
-
-    with warns_deprecated_sympy():
-        assert Eq(x) == Eq(x, 0)
 
     # issue 6116
     p = Symbol('p', positive=True)
@@ -684,8 +681,8 @@ def test_issue_8245():
     assert rel_check(a, a.n(10))
     assert rel_check(a, a.n(20))
     assert rel_check(a, a.n())
-    # prec of 30 is enough to fully capture a as mpf
-    assert Float(a, 30) == Float(str(a.p), '')/Float(str(a.q), '')
+    # prec of 31 is enough to fully capture a as mpf
+    assert Float(a, 31) == Float(str(a.p), '')/Float(str(a.q), '')
     for i in range(31):
         r = Rational(Float(a, i))
         f = Float(r)
@@ -1034,6 +1031,9 @@ def test_Equality_rewrite_as_Add():
     assert eq.rewrite(Add) == 2*x
     assert eq.rewrite(Add, evaluate=None).args == (x, x, y, -y)
     assert eq.rewrite(Add, evaluate=False).args == (x, y, x, -y)
+    for e in (True, False, None):
+        assert Eq(x, 0, evaluate=e).rewrite(Add) == x
+        assert Eq(0, x, evaluate=e).rewrite(Add) == x
 
 
 def test_issue_15847():

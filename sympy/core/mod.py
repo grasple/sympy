@@ -4,6 +4,7 @@ from .function import Function
 from .kind import NumberKind
 from .logic import fuzzy_and, fuzzy_not
 from .mul import Mul
+from .numbers import equal_valued
 from .singleton import S
 
 
@@ -40,7 +41,7 @@ class Mod(Function):
 
     @classmethod
     def eval(cls, p, q):
-        def doit(p, q):
+        def number_eval(p, q):
             """Try to return p % q if both are numbers or +/-p is known
             to be less than or equal q.
             """
@@ -99,7 +100,7 @@ class Mod(Function):
                             return -d + q
                     break
 
-        rv = doit(p, q)
+        rv = number_eval(p, q)
         if rv is not None:
             return rv
 
@@ -134,7 +135,7 @@ class Mod(Function):
             for arg in p.args:
                 both_l[isinstance(arg, cls)].append(arg)
 
-            if mod_l and all(inner.args[1] == q for inner in mod_l):
+            if mod_l and all(inner.args[1] == q for inner in mod_l) and all(t.is_integer for t in p.args) and q.is_integer:
                 # finding distributive term
                 non_mod_l = [cls(x, q) for x in non_mod_l]
                 mod = []
@@ -151,13 +152,8 @@ class Mod(Function):
                 return prod_non_mod*cls(net, q)
 
             if q.is_Integer and q is not S.One:
-                _ = []
-                for i in non_mod_l:
-                    if i.is_Integer and (i % q is not S.Zero):
-                        _.append(i%q)
-                    else:
-                        _.append(i)
-                non_mod_l = _
+                non_mod_l = [i % q if i.is_Integer and (i % q is not S.Zero) else i for
+                             i in non_mod_l]
 
             p = Mul(*(non_mod_l + mod_l))
 
@@ -169,7 +165,7 @@ class Mod(Function):
         # extract gcd; any further simplification should be done by the user
         try:
             G = gcd(p, q)
-            if G != 1:
+            if not equal_valued(G, 1):
                 p, q = [gcd_terms(i/G, clear=False, fraction=False)
                         for i in (p, q)]
         except PolynomialError:  # issue 21373
@@ -198,7 +194,7 @@ class Mod(Function):
             ok = False
             if not cp.is_Rational or not cq.is_Rational:
                 r = cp % cq
-                if r == 0:
+                if equal_valued(r, 0):
                     G *= cq
                     p *= int(cp/cq)
                     ok = True
@@ -211,15 +207,15 @@ class Mod(Function):
             G, p, q = [-i for i in (G, p, q)]
 
         # check again to see if p and q can now be handled as numbers
-        rv = doit(p, q)
+        rv = number_eval(p, q)
         if rv is not None:
             return rv*G
 
         # put 1.0 from G on inside
-        if G.is_Float and G == 1:
+        if G.is_Float and equal_valued(G, 1):
             p *= G
             return cls(p, q, evaluate=False)
-        elif G.is_Mul and G.args[0].is_Float and G.args[0] == 1:
+        elif G.is_Mul and G.args[0].is_Float and equal_valued(G.args[0], 1):
             p = G.args[0]*p
             G = Mul._from_args(G.args[1:])
         return G*cls(p, q, evaluate=(p, q) != (pwas, qwas))

@@ -278,17 +278,19 @@ Mathematical Equivalents
 +-----------------------+-----------------------+-----------------------+
 | ``Roots(Polynomial(   | ``sm.solve(           | For more information  |
 | a*x^2 + b*x + c, x,   | sm.Poly(a*x**2 +      | refer to              |
-| 2)``                  | b*x + c))``           | :ref:`solvers`.       |
+| 2)``                  | b*x + c))``           | :ref:`solvers-docs`.  |
 |                       |                       |                       |
 | ``Roots([1;2;3])``    | ``sm.solve(sm.Poly(   | For numerical         |
 |                       | sm.Matrix([1,2,3]).   | computation related   |
 |                       | reshape(3, 1), x),    | to polynomials and    |
 |                       | x)``                  | roots refer to        |
-|                       |                       | `mpmath/calculus. <htt|
-|                       |                       | p://docs.s            |
-|                       |                       | ympy.org/0.7.6/module |
-|                       |                       | s/mpmath/calculus/pol |
-|                       |                       | ynomials.html>`_      |
+|                       |                       | `mpmath/calculus. <ht |
+|                       |                       | tps://web.archive.org |
+|                       |                       | /web/20180731093609/h |
+|                       |                       | ttp://docs.sympy.org/ |
+|                       |                       | 0.7.6/modules/mpmath/ |
+|                       |                       | calculus/polynomials. |
+|                       |                       | html>`_               |
 +-----------------------+-----------------------+-----------------------+
 | ``Solve(A, x1, x2)``  | ``sm.linsolve(A,      | For more information  |
 |                       | (x1, x2))``           | refer to              |
@@ -302,7 +304,7 @@ Mathematical Equivalents
 |                       |                       | ``nonlinsolve`` and   |
 |                       |                       | ``nsolve`` in         |
 |                       |                       | :ref:`solvers.        |
-|                       |                       | <solvers>`            |
+|                       |                       | <solvers-docs>`       |
 +-----------------------+-----------------------+-----------------------+
 | ``RowMatrix = [1, 2,  | ``row_matrix =        | For more information  |
 | 3, 4]``               | sm.Matrix([[1],[2],   | refer to              |
@@ -702,7 +704,7 @@ scientific computing with Python.
 Links
 ----------
 
-:ref:`SymPy Tutorial <tutorial>`
+:ref:`SymPy Introductory Tutorial <intro-tutorial>`
 
 :ref:`SymPy Documentation <documentation>`
 

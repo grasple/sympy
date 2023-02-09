@@ -1,8 +1,12 @@
+from __future__ import annotations
+
 from sympy.core.function import Function
 from sympy.core.numbers import igcd, igcdex, mod_inverse
 from sympy.core.power import isqrt
 from sympy.core.singleton import S
+from sympy.polys import Poly
 from sympy.polys.domains import ZZ
+from sympy.polys.galoistools import gf_crt1, gf_crt2, linear_congruence
 from .primetest import isprime
 from .factor_ import factorint, trailing, totient, multiplicity
 from sympy.utilities.misc import as_int
@@ -86,7 +90,7 @@ def _primitive_root_prime_iter(p):
 
 def primitive_root(p):
     """
-    Returns the smallest primitive root or None
+    Returns the smallest primitive root or None.
 
     Parameters
     ==========
@@ -152,7 +156,7 @@ def primitive_root(p):
 
 def is_primitive_root(a, p):
     """
-    Returns True if ``a`` is a primitive root of ``p``
+    Returns True if ``a`` is a primitive root of ``p``.
 
     ``a`` is said to be the primitive root of ``p`` if gcd(a, p) == 1 and
     totient(p) is the smallest positive number s.t.
@@ -215,7 +219,7 @@ def _sqrt_mod_tonelli_shanks(a, p):
 
 def sqrt_mod(a, p, all_roots=False):
     """
-    Find a root of ``x**2 = a mod p``
+    Find a root of ``x**2 = a mod p``.
 
     Parameters
     ==========
@@ -300,7 +304,7 @@ def _product(*iters):
 
 def sqrt_mod_iter(a, p, domain=int):
     """
-    Iterate over solutions to ``x**2 = a mod p``
+    Iterate over solutions to ``x**2 = a mod p``.
 
     Parameters
     ==========
@@ -316,7 +320,6 @@ def sqrt_mod_iter(a, p, domain=int):
     >>> list(sqrt_mod_iter(11, 43))
     [21, 22]
     """
-    from sympy.polys.galoistools import gf_crt1, gf_crt2
     a, p = as_int(a), abs(as_int(p))
     if isprime(p):
         a = a % p
@@ -578,7 +581,12 @@ def _sqrt_mod1(a, p, n):
 def is_quad_residue(a, p):
     """
     Returns True if ``a`` (mod ``p``) is in the set of squares mod ``p``,
-    i.e a % p in set([i**2 % p for i in range(p)]). If ``p`` is an odd
+    i.e a % p in set([i**2 % p for i in range(p)]).
+
+    Examples
+    ========
+
+    If ``p`` is an odd
     prime, an iterative method is used to make the determination:
 
     >>> from sympy.ntheory import is_quad_residue
@@ -641,7 +649,7 @@ def is_nthpow_residue(a, n, m):
 
 
 def _is_nthpow_residue_bign(a, n, m):
-    """Returns True if ``x**n == a (mod m)`` has solutions for n > 2."""
+    r"""Returns True if `x^n = a \pmod{n}` has solutions for `n > 2`."""
     # assert n > 2
     # assert a > 0 and m > 0
     if primitive_root(m) is None or igcd(a, m) != 1:
@@ -651,13 +659,13 @@ def _is_nthpow_residue_bign(a, n, m):
                 return False
         return True
     f = totient(m)
-    k = f // igcd(f, n)
-    return pow(a, k, m) == 1
+    k = int(f // igcd(f, n))
+    return pow(a, k, int(m)) == 1
 
 
 def _is_nthpow_residue_bign_prime_power(a, n, p, k):
-    """Returns True/False if a solution for ``x**n == a (mod(p**k))``
-    does/doesn't exist."""
+    r"""Returns True/False if a solution for `x^n = a \pmod{p^k}`
+    does/does not exist."""
     # assert a > 0
     # assert n > 2
     # assert p is prime
@@ -806,7 +814,7 @@ def _nthroot_mod_composite(a, n, m):
 
 def nthroot_mod(a, n, p, all_roots=False):
     """
-    Find the solutions to ``x**n = a mod p``
+    Find the solutions to ``x**n = a mod p``.
 
     Parameters
     ==========
@@ -870,7 +878,7 @@ def nthroot_mod(a, n, p, all_roots=False):
     return res
 
 
-def quadratic_residues(p):
+def quadratic_residues(p) -> list[int]:
     """
     Returns the list of quadratic residues.
 
@@ -882,10 +890,8 @@ def quadratic_residues(p):
     [0, 1, 2, 4]
     """
     p = as_int(p)
-    r = set()
-    for i in range(p // 2 + 1):
-        r.add(pow(i, 2, p))
-    return sorted(list(r))
+    r = {pow(i, 2, p) for i in range(p // 2 + 1)}
+    return sorted(r)
 
 
 def legendre_symbol(a, p):
@@ -1004,10 +1010,6 @@ def jacobi_symbol(m, n):
         return 0
 
     j = 1
-    if m < 0:
-        m = -m
-        if n % 4 == 3:
-            j = -j
     while m != 0:
         while m % 2 == 0 and m > 0:
             m >>= 1
@@ -1017,8 +1019,6 @@ def jacobi_symbol(m, n):
         if m % 4 == n % 4 == 3:
             j = -j
         m %= n
-    if n != 1:
-        j = 0
     return j
 
 
@@ -1150,7 +1150,7 @@ def _discrete_log_shanks_steps(n, a, b, order=None):
     if order is None:
         order = n_order(b, n)
     m = isqrt(order) + 1
-    T = dict()
+    T = {}
     x = 1
     for i in range(m):
         T[x] = i
@@ -1366,13 +1366,17 @@ def discrete_log(n, a, b, order=None, prime_order=None):
 
 def quadratic_congruence(a, b, c, p):
     """
-    Find the solutions to ``a x**2 + b x + c = 0 mod p
-    a : integer
-    b : integer
-    c : integer
-    p : positive integer
+    Find the solutions to ``a x**2 + b x + c = 0 mod p.
+
+    Parameters
+    ==========
+
+    a : int
+    b : int
+    c : int
+    p : int
+        A positive integer.
     """
-    from sympy.polys.galoistools import linear_congruence
     a = as_int(a)
     b = as_int(b)
     c = as_int(c)
@@ -1486,7 +1490,6 @@ def _valid_expr(expr):
 
     if not expr.is_polynomial():
         raise ValueError("The expression should be a polynomial")
-    from sympy.polys import Poly
     polynomial = Poly(expr)
     if not polynomial.is_univariate:
         raise ValueError("The expression should be univariate")

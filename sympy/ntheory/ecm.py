@@ -53,15 +53,15 @@ class Point:
         """
         if self.a_24 != other.a_24 or self.mod != other.mod:
             return False
-        return self.x_cord * mod_inverse(self.z_cord, self.mod) % self.mod ==\
-            other.x_cord * mod_inverse(other.z_cord, self.mod) % self.mod
+        return self.x_cord * other.z_cord % self.mod ==\
+            other.x_cord * self.z_cord % self.mod
 
     def add(self, Q, diff):
         """
         Add two points self and Q where diff = self - Q. Moreover the assumption
         is self.x_cord*Q.x_cord*(self.x_cord - Q.x_cord) != 0. This algorithm
         requires 6 multiplications. Here the difference between the points
-        is already known and using this algorihtm speeds up the addition
+        is already known and using this algorithm speeds up the addition
         by reducing the number of multiplication required. Also in the
         mont_ladder algorithm is constructed in a way so that the difference
         between intermediate points is always equal to the initial point.
@@ -109,8 +109,8 @@ class Point:
         >>> p2.z_cord
         10
         """
-        u, v = self.x_cord + self.z_cord, self.x_cord - self.z_cord
-        u, v = u*u, v*v
+        u = pow(self.x_cord + self.z_cord, 2, self.mod)
+        v = pow(self.x_cord - self.z_cord, 2, self.mod)
         diff = u - v
         x_cord = u*v % self.mod
         z_cord = diff*(v + self.a_24*diff) % self.mod
@@ -193,8 +193,6 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
     .. [1]  Carl Pomerance and Richard Crandall "Prime Numbers:
         A Computational Perspective" (2nd Ed.), page 344
     """
-    from sympy.functions.elementary.miscellaneous import sqrt
-    from sympy.polys.polytools import gcd
     n = as_int(n)
     if B1 % 2 != 0 or B2 % 2 != 0:
         raise ValueError("The Bounds should be an even integer")
@@ -203,17 +201,16 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
     if isprime(n):
         return n
 
-    curve = 0
+    from sympy.functions.elementary.miscellaneous import sqrt
+    from sympy.polys.polytools import gcd
     D = int(sqrt(B2))
     beta = [0]*(D + 1)
     S = [0]*(D + 1)
     k = 1
     for p in sieve.primerange(1, B1 + 1):
         k *= pow(p, integer_log(B1, p)[0])
-    while(curve <= max_curve):
-        curve += 1
-
-        #Suyama's Paramatrization
+    for _ in range(max_curve):
+        #Suyama's Parametrization
         sigma = rgen.randint(6, n - 1)
         u = (sigma*sigma - 5) % n
         v = (4*sigma) % n
@@ -223,8 +220,12 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
         try:
             C = (pow(diff, 3, n)*(3*u + v)*mod_inverse(4*u_3*v, n) - 2) % n
         except ValueError:
-            #If the mod_inverse(4*u_3*v, n) doesn't exist
-            return gcd(4*u_3*v, n)
+            #If the mod_inverse(4*u_3*v, n) doesn't exist (i.e., g != 1)
+            g = gcd(4*u_3*v, n)
+            #If g = n, try another curve
+            if g == n:
+                continue
+            return g
 
         a24 = (C + 2)*mod_inverse(4, n) % n
         Q = Point(u_3, pow(v, 3, n), a24, n)
@@ -257,8 +258,10 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
             alpha = (R.x_cord*R.z_cord) % n
             for q in sieve.primerange(r + 2, r + 2*D + 1):
                 delta = (q - r) // 2
-                f = (R.x_cord - S[d].x_cord)*(R.z_cord + S[d].z_cord) -\
-                alpha + beta[delta]
+                # We want to calculate
+                # f = R.x_cord * S[delta].z_cord - S[delta].x_cord * R.z_cord
+                f = (R.x_cord - S[delta].x_cord)*\
+                    (R.z_cord + S[delta].z_cord) - alpha + beta[delta]
                 g = (g*f) % n
             #Swap
             T, R = R, R.add(S[D], T)

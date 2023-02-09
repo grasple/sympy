@@ -9,13 +9,13 @@ Gotchas and Pitfalls
 Introduction
 ============
 
-SymPy runs under the `Python Programming Language
-<https://www.python.org/>`_, so there are some things that may behave
-differently than they do in other, independent computer algebra systems
-like Maple or Mathematica.  These are some of the gotchas and pitfalls
-that you may encounter when using SymPy.  See also the `FAQ
-<https://github.com/sympy/sympy/wiki/Faq>`_, the :ref:`Tutorial<tutorial>`, the
-remainder of the SymPy Docs, and the `official Python Tutorial <https://docs.python.org/3/tutorial/>`_.
+SymPy runs under the `Python Programming Language <https://www.python.org/>`_,
+so there are some things that may behave differently than they do in other,
+independent computer algebra systems like Maple or Mathematica. These are some
+of the gotchas and pitfalls that you may encounter when using SymPy. See also
+the `FAQ <https://github.com/sympy/sympy/wiki/Faq>`_, the :ref:`introductory
+tutorial<intro-tutorial>`, the remainder of the SymPy Docs, and the `official
+Python Tutorial <https://docs.python.org/3/tutorial/>`_.
 
 
 If you are already familiar with C or Java, you might also want to look
@@ -814,28 +814,3 @@ These will give you the function parameters and docstring for
 .. module:: sympy.simplify.simplify
 .. autofunction:: powsimp
    :noindex:
-
-source()
---------
-
-Another useful option is the :func:`~.source` function.  This will print
-the source code of a function, including any docstring that it may have.
-You can also do ``function??`` in :command:`ipython`.  For example,
-from SymPy 0.6.5:
-
-    >>> source(simplify)  # simplify() is actually only 2 lines of code. #doctest: +SKIP
-    In file: ./sympy/simplify/simplify.py
-    def simplify(expr):
-        """Naively simplifies the given expression.
-           ...
-           Simplification is not a well defined term and the exact strategies
-           this function tries can change in the future versions of SymPy. If
-           your algorithm relies on "simplification" (whatever it is), try to
-           determine what you need exactly  -  is it powsimp()? radsimp()?
-           together()?, logcombine()?, or something else? And use this particular
-           function directly, because those are well defined and thus your algorithm
-           will be robust.
-           ...
-        """
-        expr = Poly.cancel(powsimp(expr))
-        return powsimp(together(expr.expand()), combine='exp', deep=True)
