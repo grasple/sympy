@@ -122,7 +122,7 @@ class lerchphi(Function):
 
     .. [1] Bateman, H.; Erdelyi, A. (1953), Higher Transcendental Functions,
            Vol. I, New York: McGraw-Hill. Section 1.11.
-    .. [2] http://dlmf.nist.gov/25.14
+    .. [2] https://dlmf.nist.gov/25.14
     .. [3] https://en.wikipedia.org/wiki/Lerch_transcendent
 
     """
@@ -493,7 +493,7 @@ class zeta(Function):
     References
     ==========
 
-    .. [1] http://dlmf.nist.gov/25.11
+    .. [1] https://dlmf.nist.gov/25.11
     .. [2] https://en.wikipedia.org/wiki/Hurwitz_zeta_function
 
     """
@@ -565,7 +565,7 @@ class zeta(Function):
         else:
             raise ArgumentIndexError
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         if len(self.args) == 2:
             s, a = self.args
         else:
@@ -579,7 +579,7 @@ class zeta(Function):
         if e.is_negative and not s.is_positive:
             raise NotImplementedError
 
-        return super(zeta, self)._eval_as_leading_term(x, logx, cdir)
+        return super(zeta, self)._eval_as_leading_term(x, logx=logx, cdir=cdir)
 
 
 class dirichlet_eta(Function):
