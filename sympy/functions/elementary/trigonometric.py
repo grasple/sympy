@@ -1,8 +1,8 @@
-from typing import Tuple as tTuple, Union as tUnion
+from __future__ import annotations
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.expr import Expr
-from sympy.core.function import Function, ArgumentIndexError, PoleError, expand_mul
+from sympy.core.function import DefinedFunction, ArgumentIndexError, PoleError, expand_mul
 from sympy.core.logic import fuzzy_not, fuzzy_or, FuzzyBool, fuzzy_and
 from sympy.core.mod import Mod
 from sympy.core.numbers import Rational, pi, Integer, Float, equal_valued
@@ -42,7 +42,7 @@ def _imaginary_unit_as_coefficient(arg):
 ###############################################################################
 
 
-class TrigonometricFunction(Function):
+class TrigonometricFunction(DefinedFunction):
     """Base class for trigonometric functions. """
 
     unbranched = True
@@ -165,7 +165,7 @@ def _peeloff_pi(arg):
     return arg, S.Zero
 
 
-def _pi_coeff(arg: Expr, cycles: int = 1) -> tUnion[Expr, None]:
+def _pi_coeff(arg: Expr, cycles: int = 1) -> Expr | None:
     r"""
     When arg is a Number times $\pi$ (e.g. $3\pi/2$) then return the Number
     normalized to be in the range $[0, 2]$, else `None`.
@@ -434,7 +434,7 @@ class sin(TrigonometricFunction):
             arg = arg.subs(log(x), logx)
         if arg.subs(x, 0).has(S.NaN, S.ComplexInfinity):
             raise PoleError("Cannot expand %s around 0" % (self))
-        return Function._eval_nseries(self, x, n=n, logx=logx, cdir=cdir)
+        return super()._eval_nseries(x, n=n, logx=logx, cdir=cdir)
 
     def _eval_rewrite_as_exp(self, arg, **kwargs):
         from sympy.functions.elementary.hyperbolic import HyperbolicFunction
@@ -763,7 +763,7 @@ class cos(TrigonometricFunction):
             arg = arg.subs(log(x), logx)
         if arg.subs(x, 0).has(S.NaN, S.ComplexInfinity):
             raise PoleError("Cannot expand %s around 0" % (self))
-        return Function._eval_nseries(self, x, n=n, logx=logx, cdir=cdir)
+        return super()._eval_nseries(x, n=n, logx=logx, cdir=cdir)
 
     def _eval_rewrite_as_exp(self, arg, **kwargs):
         I = S.ImaginaryUnit
@@ -1114,7 +1114,7 @@ class tan(TrigonometricFunction):
         i = self.args[0].limit(x, 0)*2/pi
         if i and i.is_Integer:
             return self.rewrite(cos)._eval_nseries(x, n=n, logx=logx)
-        return Function._eval_nseries(self, x, n=n, logx=logx)
+        return super()._eval_nseries(x, n=n, logx=logx)
 
     def _eval_rewrite_as_Pow(self, arg, **kwargs):
         if isinstance(arg, log):
@@ -1902,7 +1902,7 @@ class csc(ReciprocalTrigonometricFunction):
         return self.func(x0) if x0.is_finite else self
 
 
-class sinc(Function):
+class sinc(DefinedFunction):
     r"""
     Represents an unnormalized sinc function:
 
@@ -2026,9 +2026,9 @@ class sinc(Function):
 ###############################################################################
 
 
-class InverseTrigonometricFunction(Function):
+class InverseTrigonometricFunction(DefinedFunction):
     """Base class for inverse trigonometric functions."""
-    _singularities = (S.One, S.NegativeOne, S.Zero, S.ComplexInfinity)  # type: tTuple[Expr, ...]
+    _singularities: tuple[Expr, ...] = (S.One, S.NegativeOne, S.Zero, S.ComplexInfinity)
 
     @staticmethod
     @cacheit
@@ -2293,7 +2293,7 @@ class asin(InverseTrigonometricFunction):
             res = (res1.removeO()*sqrt(f)).expand()
             return ser.removeO().subs(t, res).expand().powsimp() + O(x**n, x)
 
-        res = Function._eval_nseries(self, x, n=n, logx=logx)
+        res = super()._eval_nseries(x, n=n, logx=logx)
         if arg0 is S.ComplexInfinity:
             return res
         # Handling points lying on branch cuts (-oo, -1) U (1, oo)
@@ -2562,7 +2562,7 @@ class acos(InverseTrigonometricFunction):
             res = (res1.removeO()*sqrt(f)).expand()
             return ser.removeO().subs(t, res).expand().powsimp() + O(x**n, x)
 
-        res = Function._eval_nseries(self, x, n=n, logx=logx)
+        res = super()._eval_nseries(x, n=n, logx=logx)
         if arg0 is S.ComplexInfinity:
             return res
         # Handling points lying on branch cuts (-oo, -1) U (1, oo)
@@ -2653,7 +2653,7 @@ class atan(InverseTrigonometricFunction):
 
     """
 
-    args: tTuple[Expr]
+    args: tuple[Expr]
 
     _singularities = (S.ImaginaryUnit, -S.ImaginaryUnit)
 
@@ -2775,7 +2775,7 @@ class atan(InverseTrigonometricFunction):
         if arg0 in (S.ImaginaryUnit, S.NegativeOne*S.ImaginaryUnit):
             return self.rewrite(log)._eval_nseries(x, n, logx=logx, cdir=cdir)
 
-        res = Function._eval_nseries(self, x, n=n, logx=logx)
+        res = super()._eval_nseries(x, n=n, logx=logx)
         ndir = self.args[0].dir(x, cdir if cdir else 1)
         if arg0 is S.ComplexInfinity:
             if re(ndir) > 0:
@@ -2900,9 +2900,7 @@ class acot(InverseTrigonometricFunction):
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
-            elif arg is S.Infinity:
-                return S.Zero
-            elif arg is S.NegativeInfinity:
+            elif arg is S.Infinity or arg is S.NegativeInfinity:
                 return S.Zero
             elif arg.is_zero:
                 return pi/ 2
@@ -2938,7 +2936,7 @@ class acot(InverseTrigonometricFunction):
             if ang.is_comparable:
                 ang %= pi # restrict to [0,pi)
                 if ang > pi/2: # restrict to (-pi/2,pi/2]
-                    ang -= pi;
+                    ang -= pi
                 return ang
 
         if isinstance(arg, tan): # atan(x) + acot(x) = pi/2
@@ -2990,7 +2988,7 @@ class acot(InverseTrigonometricFunction):
         if arg0 in (S.ImaginaryUnit, S.NegativeOne*S.ImaginaryUnit):
             return self.rewrite(log)._eval_nseries(x, n, logx=logx, cdir=cdir)
 
-        res = Function._eval_nseries(self, x, n=n, logx=logx)
+        res = super()._eval_nseries(x, n=n, logx=logx)
         if arg0 is S.ComplexInfinity:
             return res
         ndir = self.args[0].dir(x, cdir if cdir else 1)
@@ -3231,7 +3229,7 @@ class asec(InverseTrigonometricFunction):
             res = (res1.removeO()*sqrt(f)).expand()
             return ser.removeO().subs(t, res).expand().powsimp() + O(x**n, x)
 
-        res = Function._eval_nseries(self, x, n=n, logx=logx)
+        res = super()._eval_nseries(x, n=n, logx=logx)
         if arg0 is S.ComplexInfinity:
             return res
         # Handling points lying on branch cuts (-1, 1)
@@ -3441,7 +3439,7 @@ class acsc(InverseTrigonometricFunction):
             res = (res1.removeO()*sqrt(f)).expand()
             return ser.removeO().subs(t, res).expand().powsimp() + O(x**n, x)
 
-        res = Function._eval_nseries(self, x, n=n, logx=logx)
+        res = super()._eval_nseries(x, n=n, logx=logx)
         if arg0 is S.ComplexInfinity:
             return res
         # Handling points lying on branch cuts (-1, 1)
@@ -3540,7 +3538,7 @@ class atan2(InverseTrigonometricFunction):
     >>> atan2(1, -1)
     3*pi/4
 
-    where only the `\operatorname{atan2}` function reurns what we expect.
+    where only the `\operatorname{atan2}` function returns what we expect.
     We can differentiate the function with respect to both arguments:
 
     >>> from sympy import diff

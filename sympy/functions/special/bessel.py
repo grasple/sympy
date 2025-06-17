@@ -4,7 +4,7 @@ from sympy.core import S
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.expr import Expr
-from sympy.core.function import Function, ArgumentIndexError, _mexpand
+from sympy.core.function import DefinedFunction, ArgumentIndexError, _mexpand
 from sympy.core.logic import fuzzy_or, fuzzy_not
 from sympy.core.numbers import Rational, pi, I
 from sympy.core.power import Pow
@@ -33,7 +33,7 @@ from mpmath import mp, workprec
 # o Add solvers to ode.py (or rather add solvers for the hypergeometric equation).
 
 
-class BesselBase(Function):
+class BesselBase(DefinedFunction):
     """
     Abstract base class for Bessel-type functions.
 
@@ -1344,7 +1344,7 @@ def jn_zeros(n, k, method="sympy", dps=15):
     return roots
 
 
-class AiryBase(Function):
+class AiryBase(DefinedFunction):
     """
     Abstract base class for Airy functions.
 
@@ -1468,9 +1468,7 @@ class airyai(AiryBase):
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
-            elif arg is S.Infinity:
-                return S.Zero
-            elif arg is S.NegativeInfinity:
+            elif arg is S.Infinity or arg is S.NegativeInfinity:
                 return S.Zero
             elif arg.is_zero:
                 return S.One / (3**Rational(2, 3) * gamma(Rational(2, 3)))
@@ -2041,7 +2039,7 @@ class airybiprime(AiryBase):
                     return S.Half * (sqrt(3)*(pf - S.One)*airyaiprime(newarg) + (pf + S.One)*airybiprime(newarg))
 
 
-class marcumq(Function):
+class marcumq(DefinedFunction):
     r"""
     The Marcum Q-function.
 
@@ -2146,7 +2144,7 @@ class marcumq(Function):
         if all(arg.is_zero for arg in self.args):
             return True
 
-class _besseli(Function):
+class _besseli(DefinedFunction):
     """
     Helper function to make the $\\mathrm{besseli}(nu, z)$
     function tractable for the Gruntz algorithm.
@@ -2177,7 +2175,7 @@ class _besseli(Function):
         return super()._eval_nseries(x, n, logx)
 
 
-class _besselk(Function):
+class _besselk(DefinedFunction):
     """
     Helper function to make the $\\mathrm{besselk}(nu, z)$
     function tractable for the Gruntz algorithm.
