@@ -330,7 +330,7 @@ class ArrayAdd(_CodegenArrayAbstract):
         ranks = list(set(ranks))
         if len(ranks) != 1:
             raise ValueError("summing arrays of different ranks")
-        shapes = [arg.shape for arg in args]
+        shapes = [arg.shape if hasattr(arg, "shape") else () for arg in args]
         if len({i for i in shapes if i is not None}) > 1:
             raise ValueError("mismatching shapes in addition")
 
@@ -951,7 +951,7 @@ class ArrayElementwiseApplyFunc(_CodegenArrayAbstract):
 
     @property
     def shape(self):
-        return self.expr.shape
+        return get_shape(self.expr)
 
     def _get_function_fdiff(self):
         d = Dummy("d")
@@ -1598,8 +1598,7 @@ class _ArgE:
             self.indices = indices
 
     def __str__(self):
-        return "_ArgE(%s, %s)" % (self.element, self.indices)
-
+        return f"_ArgE({self.element}, {self.indices})"
     __repr__ = __str__
 
 
@@ -1615,7 +1614,7 @@ class _IndPos:
         self.rel = rel
 
     def __str__(self):
-        return "_IndPos(%i, %i)" % (self.arg, self.rel)
+        return f"_IndPos({self.arg}, {self.rel})"
 
     __repr__ = __str__
 
